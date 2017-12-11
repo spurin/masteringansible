@@ -1,0 +1,15 @@
+[control]
+ubuntu-c
+
+[dns]
+dnsmasq
+
+[centos]
+centos[1:3]
+
+[ubuntu]
+ubuntu[1:3]
+
+[linux:children]
+centos
+ubuntu

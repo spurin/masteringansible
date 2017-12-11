@@ -1,0 +1,47 @@
+---
+# YAML documents begin with the document separator ---
+
+# The minus in YAML this indicates a list item.  The playbook contains a list
+# of plays, with each play being a dictionary
+-
+
+  # Target: where our play will run and options it will run with
+  hosts: linux
+
+  # Task: the list of tasks that will be executed within the play, this section
+  # can also be used for pre and post tasks
+  tasks:
+    - name: Add dynamic dns rule
+      command: "/usr/local/bin/hostsman -i dynamic_{{ ansible_hostname }}:{{ ansible_default_ipv4.address }}"
+      delegate_to: dnsmasq
+
+    - name: Reload dnsmasq
+      service:
+        name: dnsmasq
+        state: reloaded
+      delegate_to: dnsmasq
+      run_once: true
+
+    - name: Check DNS entries for all hosts
+      debug: 
+        msg: "The IPv4 address for dynamic_{{ item }} is {{ lookup('dig', 'dynamic_{{ item }}') }}"
+      with_items: "{{ play_hosts }}"
+
+    - name: Check DNS entry is pingable
+      icmp: 
+        target: "dynamic_{{ item }}"
+      with_items: "{{ play_hosts }}"
+
+    - name: Remove dynamic dns rule
+      command: "/usr/local/bin/hostsman -r dynamic_{{ ansible_hostname }}"
+      delegate_to: dnsmasq
+
+    - name: Reload dnsmasq
+      service:
+        name: dnsmasq
+        state: reloaded
+      delegate_to: dnsmasq
+      run_once: true
+
+# Three dots indicate the end of a YAML document
+...

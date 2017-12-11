@@ -1,0 +1,98 @@
+---
+# YAML documents begin with the document separator ---
+
+# The minus in YAML this indicates a list item.  The playbook contains a list
+# of plays, with each play being a dictionary
+-
+
+  # Target: where our play will run and options it will run with
+  hosts: ubuntu3,centos3
+
+  # Task: the list of tasks that will be executed within the play, this section
+  # can also be used for pre and post tasks
+  tasks:
+    - name: Install EPEL
+      yum:
+        name: epel-release
+        update_cache: yes
+        state: latest
+      when: ansible_distribution == 'CentOS'
+
+    - name: Install Nginx
+      package:
+        name: nginx
+        state: latest
+
+    - name: Install Patch
+      yum:
+        name: patch
+        update_cache: yes
+        state: latest
+      when: ansible_distribution == 'CentOS'
+
+    - name: Patch nginx.conf to include sites-available, disable default server entry
+      patch:
+        src: files/nginx.conf.centos.patch
+        dest: /etc/nginx/nginx.conf
+      when: ansible_distribution == 'CentOS'
+
+    - name: Create /etc/nginx/sites-available directory if required
+      file:
+        path: /etc/nginx/sites-available
+        state: directory
+
+    - name: Create /etc/nginx/sites-enabled directory if required
+      file:
+        path: /etc/nginx/sites-enabled
+        state: directory
+
+    - name: Copy default nginx configuration
+      copy:
+        src: files/nginx-default.conf
+        dest: /etc/nginx/sites-available/default
+
+    - name: Symbolic link /etc/nginx/sites-available/default to /etc/nginx/sites-enabled/default
+      file:
+        src: /etc/nginx/sites-available/default
+        dest: /etc/nginx/sites-enabled/default
+        state: link
+
+    - name: Create nginx/html directory if required
+      file:
+        path: /usr/share/nginx/html
+        state: directory
+
+    - name: Template index.html.j2 to index.html on target
+      template:
+        src: templates/index.html.j2
+        dest: /usr/share/nginx/html/index.html
+        mode: 0644
+
+    - name: Restart nginx
+      service:
+        name: nginx
+        state: restarted
+      notify: Check HTTP Service
+
+    - name: Open CentOS firewall for Nginx
+      firewalld:
+        service: http
+        permanent: true
+        state: enabled
+      when: ansible_distribution == 'CentOS'
+      notify: Reload Firewall
+
+  # Handlers: handlers that are executed as a notify key from a task
+  handlers:
+    - name: Check HTTP Service
+      uri:
+        url: http://{{ ansible_default_ipv4.address }}
+        status_code: 200
+
+    - name: Reload Firewall
+      service:
+        name: firewalld
+        state: reloaded
+
+# Three dots indicate the end of a YAML document
+...

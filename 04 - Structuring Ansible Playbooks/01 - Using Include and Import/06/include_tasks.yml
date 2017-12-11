@@ -1,0 +1,9 @@
+---
+# YAML documents begin with the document separator ---
+
+- name: Sub Task
+  debug: 
+    msg: "Sub Task - {{ item }}"
+
+# Three dots indicate the end of a YAML document
+...

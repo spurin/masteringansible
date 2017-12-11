@@ -1,0 +1,4 @@
+---
+# defaults file for awesomeweb
+
+target_dir: /usr/share/nginx/html

@@ -1,0 +1,18 @@
+---
+# tasks file for awesomeweb
+
+- name: Template index.html.j2 to index.html on target
+  template:
+    src: templates/index.html.j2
+    dest: /usr/share/nginx/html/index.html
+    mode: 0644
+  tags:
+    - nginx-template
+
+- name: Restart nginx
+  service:
+    name: nginx
+    state: restarted
+  notify: Check HTTP Service
+  tags:
+    - always

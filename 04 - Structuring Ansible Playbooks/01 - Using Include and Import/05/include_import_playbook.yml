@@ -1,0 +1,22 @@
+---
+# YAML documents begin with the document separator ---
+
+# The minus in YAML this indicates a list item.  The playbook contains a list
+# of plays, with each play being a dictionary
+
+# include (deprecated) is static
+#
+# Each task that is in the playbook in the include will be independently executed against
+# the when condition
+- include: include_playbook.yml
+  when: include_playbook_var is not defined
+
+# import_playbook is static
+#
+# Each task that is in the playbook in the import will be independently executed against
+# the when condition
+- import_playbook: import_playbook.yml
+  when: import_playbook_var is not defined
+
+# Three dots indicate the end of a YAML document
+...

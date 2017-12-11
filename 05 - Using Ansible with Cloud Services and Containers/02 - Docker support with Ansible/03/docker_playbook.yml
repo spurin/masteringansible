@@ -1,0 +1,27 @@
+---
+# YAML documents begin with the document separator ---
+
+# The minus in YAML this indicates a list item.  The playbook contains a list
+# of plays, with each play being a dictionary
+-
+
+  # Target: where our play will run and options it will run with
+  hosts: docker-server
+  
+  # Task: the list of tasks that will be executed within the play, this section
+  # can also be used for pre and post tasks
+  tasks:
+    - name: Pull rastasheep's ubuntu-sshd image
+      docker_image:
+        name: rastasheep/ubuntu-sshd
+
+    - name: Create a container from the rastasheep/ubuntu-sshd image, port forward 22 to 2222
+      docker_container:
+        name: sshdserver
+        image: rastasheep/ubuntu-sshd
+        ports:
+          - "2222:22"
+        command: /usr/sbin/sshd -D
+    
+# Three dots indicate the end of a YAML document
+...

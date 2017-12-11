@@ -1,0 +1,93 @@
+---
+# tasks file for nginx---
+
+- name: Install EPEL CentOS
+  yum:
+    name: epel-release
+    update_cache: yes
+    state: latest
+  when: ansible_distribution == 'CentOS'
+  tags:
+    - install-epel
+
+- name: Install EPEL RedHat
+  yum:
+    name: https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+    update_cache: yes
+    state: latest
+  when: ansible_distribution == 'RedHat'
+  tags:
+    - install-epel
+
+- name: Install Nginx
+  package:
+    name: nginx
+    state: latest
+  tags:
+    - install-nginx
+
+- name: Install Patch
+  yum:
+    name: patch
+    update_cache: yes
+    state: latest
+  when: ansible_os_family == 'RedHat'
+  tags:
+    - patch-nginx
+
+- name: Patch nginx.conf to include sites-available, disable default server entry
+  patch:
+    src: nginx.conf.centos.patch
+    dest: /etc/nginx/nginx.conf
+  when: ansible_os_family == 'RedHat'
+  tags:
+    - patch-nginx
+
+- name: Create /etc/nginx/sites-available directory if required
+  file:
+    path: /etc/nginx/sites-available
+    state: directory
+  tags:
+    - patch-nginx
+
+- name: Create /etc/nginx/sites-enabled directory if required
+  file:
+    path: /etc/nginx/sites-enabled
+    state: directory
+  tags:
+    - patch-nginx
+
+- name: Copy default nginx configuration
+  copy:
+    src: nginx-default.conf
+    dest: /etc/nginx/sites-available/default
+  tags:
+    - patch-nginx
+
+- name: Symbolic link /etc/nginx/sites-available/default to /etc/nginx/sites-enabled/default
+  file:
+    src: /etc/nginx/sites-available/default
+    dest: /etc/nginx/sites-enabled/default
+    state: link
+  tags:
+    - patch-nginx
+
+- name: Create nginx/html directory if required
+  file:
+    path: /usr/share/nginx/html
+    state: directory
+  tags:
+    - patch-nginx
+
+- name: Open CentOS firewall for Nginx
+  firewalld:
+    service: http
+    permanent: true
+    state: enabled
+  when: ansible_distribution == 'CentOS'
+  notify: Reload Firewall
+  tags:
+    - nginx-open-firewall
+
+# Three dots indicate the end of a YAML document
+...

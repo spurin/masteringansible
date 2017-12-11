@@ -1,0 +1,47 @@
+---
+# YAML documents begin with the document separator ---
+
+# The minus in YAML this indicates a list item.  The playbook contains a list
+# of plays, with each play being a dictionary
+-
+
+  # Target: where our play will run and options it will run with
+  hosts: centos1
+
+  # Task: the list of tasks that will be executed within the play, this section
+  # can also be used for pre and post tasks
+  tasks:
+
+     - debug:
+         msg: ===================== Testing include_tasks =====================
+
+     # include_tasks is dynamic
+     #
+     # The when statement is executed once, if the condition is met, all
+     # tasks are executed
+     - include_tasks: include_tasks.yml
+       when: include_tasks_var is not defined
+
+     - debug:
+         msg: ======================== Testing include ========================
+
+     # include (deprecated) is static (unless overriden)
+     #
+     # Each task that in the include will be independently executed against
+     # the when condition
+     - include: include.yml
+       when: include_var is not defined
+       #static: false
+
+     - debug:
+         msg: ===================== Testing import_tasks ======================
+
+     # import_tasks is static
+     #
+     # Each task that in the include will be independently executed against
+     # the when condition
+     - import_tasks: import_tasks.yml
+       when: import_tasks_var is not defined
+
+# Three dots indicate the end of a YAML document
+...

@@ -1,0 +1,78 @@
+---
+# YAML documents begin with the document separator ---
+
+# The minus in YAML this indicates a list item.  The playbook contains a list
+# of plays, with each play being a dictionary
+-
+
+  # Target: where our play will run and options it will run with
+  hosts: docker-server
+  
+  # Task: the list of tasks that will be executed within the play, this section
+  # can also be used for pre and post tasks
+  tasks:
+    - name: Pull rastasheep's ubuntu-sshd image
+      docker_image:
+        name: rastasheep/ubuntu-sshd
+
+    - name: Create a container from the rastasheep/ubuntu-sshd image, port forward 22 to 2222
+      docker_container:
+        name: sshdserver
+        image: rastasheep/ubuntu-sshd
+        ports:
+          - "2222:22"
+        command: /usr/sbin/sshd -D
+
+    - add_host:
+        hostname: "docker-container"
+        ansible_host: "{{ ansible_default_ipv4.address }}"
+        ansible_port: 2222
+        ansible_user: root
+        # This is reliant on sshpass being installed
+        ansible_password: root
+
+-
+
+  # Target: where our play will run and options it will run with
+  hosts: docker-container
+
+  # Roles: list of roles to be imported into the play
+  roles:
+    - awesomeweb
+
+-  
+
+  # Target: where our play will run and options it will run with
+  hosts: docker-server
+
+  # Task: the list of tasks that will be executed within the play, this section
+  # can also be used for pre and post tasks
+  tasks:
+    - name: Create docker image from SSHD container
+      command: "docker commit -c 'CMD [\"nginx\", \"-g\", \"daemon off;\"]' sshdserver ansible/awesomeweb:latest"
+
+    - name: Create an awesomeweb container from the new ansible/awesomeweb docker image
+      docker_container:
+        name: awesomeweb
+        image: ansible/awesomeweb:latest
+        ports:
+          - "80:80"
+
+    - name: Prompt for the site to be tested
+      pause: 
+        prompt: "Check http://{{ ansible_default_ipv4.address }} "
+
+    - name: Remove containers
+      docker_container:
+        name: "{{ item }}"
+        state: absent
+      with_items: ['awesomeweb', 'sshdserver']
+
+    - name: Remove images
+      docker_image:
+        name: "{{ item }}"
+        state: absent
+      with_items: ['rastasheep/ubuntu-sshd', 'ansible/awesomeweb']
+
+# Three dots indicate the end of a YAML document
+...
