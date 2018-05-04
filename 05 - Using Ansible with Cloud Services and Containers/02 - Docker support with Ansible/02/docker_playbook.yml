@@ -11,6 +11,10 @@
   # Task: the list of tasks that will be executed within the play, this section
   # can also be used for pre and post tasks
   tasks:
+    - name: install docker-py with pip
+      pip:
+        name: docker-py
+
     - name: Pull rastasheep's ubuntu-sshd image
       docker_image:
         name: rastasheep/ubuntu-sshd
