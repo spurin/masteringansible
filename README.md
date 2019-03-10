@@ -2,4 +2,6 @@
 
 Repository for course content for Packt Mastering Ansible Course
 
-Please report any problems as issues within this repository.
+Supporting website now at https://masteringansible.com
+
+If you experience any problems with the course, or within this repository please reach out to me direct, James Spurin, or flag an issue in the repository.
